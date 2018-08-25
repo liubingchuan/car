@@ -3,7 +3,6 @@ package com.car.app.common;
 
 import java.io.Serializable;
 
-import com.car.app.utils.ErrorCode;
 
 public class BaseResponse implements Serializable {
 
@@ -56,14 +55,6 @@ public class BaseResponse implements Serializable {
 		this.successResponse = false;
 		this.code = code;
 		this.message = message;
-	}
-
-	public void setErrorResponse(String code, String message, ErrorCode errorCode) {
-		this.successResponse = false;
-		this.code = code;
-		this.message = message;
-		this.key = errorCode.key;
-		this.level = errorCode.level;
 	}
 
 	public void setErrorResponse(String code, String message, Object... args) {

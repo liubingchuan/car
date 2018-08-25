@@ -10,7 +10,7 @@ spring:
      init-sql: mysql/init.sql
 
 server:
-  port: 80
+  port: 8090
     
 mybatis:
   configuration:

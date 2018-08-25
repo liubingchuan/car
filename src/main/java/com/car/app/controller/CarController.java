@@ -10,27 +10,23 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.car.app.common.BaseResponse;
-import com.car.app.service.CarService;
+import com.car.app.dao.mapper.UserMapper;
 
 
 
 @CrossOrigin(origins = "*", maxAge = 3600, allowCredentials = "true")
 @RestController
-@RequestMapping("/api/funrockcar ")
+@RequestMapping("/api/funrockcar")
 public class CarController {
 
 	private static final Logger logger = LoggerFactory.getLogger(CarController.class);
 	
-	private final CarService service;
-	
 	@Autowired
-	public CarController(CarService service) {
-		this.service = service;
-	}
+    private UserMapper mapper;
 	
 	@PostMapping("/register")
 	@ResponseBody
-	public BaseResponse describeDBInstanceList() {
+	public BaseResponse register() {
 		return null;
 	}
 	

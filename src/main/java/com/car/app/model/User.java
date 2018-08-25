@@ -3,7 +3,7 @@ package com.car.app.model;
 import com.car.app.annotation.IdFlag;
 import com.car.app.annotation.TableName;
 
-@TableName("rds_user")
+@TableName("user")
 public class User {
 
 	public User() {
