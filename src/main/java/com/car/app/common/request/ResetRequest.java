@@ -2,11 +2,9 @@ package com.car.app.common.request;
 
 import com.car.app.common.BaseRequest;
 
-public class RegisterRequest extends BaseRequest{
+public class ResetRequest extends BaseRequest{
 
 	private String account;
-	
-	private String imei;
 	
 	private String password;
 	
@@ -18,14 +16,6 @@ public class RegisterRequest extends BaseRequest{
 
 	public void setAccount(String account) {
 		this.account = account;
-	}
-
-	public String getImei() {
-		return imei;
-	}
-
-	public void setImei(String imei) {
-		this.imei = imei;
 	}
 
 	public String getPassword() {

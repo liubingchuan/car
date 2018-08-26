@@ -2,11 +2,11 @@ package com.car.app.common.request;
 
 import com.car.app.common.BaseRequest;
 
-public class RegisterRequest extends BaseRequest{
+public class LoginRequest extends BaseRequest{
 
 	private String account;
 	
-	private String imei;
+	private String deviceId;
 	
 	private String password;
 	
@@ -20,12 +20,13 @@ public class RegisterRequest extends BaseRequest{
 		this.account = account;
 	}
 
-	public String getImei() {
-		return imei;
+
+	public String getDeviceId() {
+		return deviceId;
 	}
 
-	public void setImei(String imei) {
-		this.imei = imei;
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
 	}
 
 	public String getPassword() {

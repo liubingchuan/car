@@ -12,16 +12,19 @@ import java.util.List;
 @Component
 public interface UserMapper {
 
-    @Select("SELECT * FROM rds_user")
+    @Select("SELECT * FROM car_user")
     List<User> getAll();
+    
+    @Select("SELECT * FROM car_user where account = #{account}")
+    List<User> getUserByAccount(@Param("account") String account);
 
-//    @Insert("INSERT INTO rds_user (uid, user_id) "
-//        + "VALUES (#{rdsUser.uid}, #{rdsUser.userId})")
-//    void insertRdsUser(@Param("rdsUser") RdsUser rdsUser);
     @InsertProvider(type = BasedProvider.class, method = BasedProvider.INSERT)
-    int insertRdsUser(User rdsUser);
+    int insertUser(User user);
 
-    @Delete("DELETE FROM rds_user")
+    @Delete("DELETE FROM car_user")
     void deleteAll();
+    
+    @Update("update car_user set password = #{password} where account = #{account}")
+    void updatePassword(@Param("account") String account, @Param("password") String password);
 
 }

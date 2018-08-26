@@ -1,5 +1,4 @@
 package com.car.app.config;
-/*package com.alicloud.aso.apiadapter.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -20,7 +19,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static com.alicloud.aso.apiadapter.utils.StringUtil.isNull;
+import static com.car.app.utils.StringUtil.isNull;
 
 @Configuration
 @ConfigurationProperties(prefix = "spring.datasource")
@@ -35,102 +34,102 @@ public class DatasourceConfig {
     private String testSql = "select 1 from dual";
     private String databaseName;
 
-    *//**
+    /**
      * Gets username.
      *
      * @return the username
-     *//*
+     */
     public String getUsername() {
         return username;
     }
 
-    *//**
+    /**
      * Sets username.
      *
      * @param username the username
-     *//*
+     */
     public void setUsername(String username) {
         this.username = username;
     }
 
-    *//**
+    /**
      * Gets password.
      *
      * @return the password
-     *//*
+     */
     public String getPassword() {
         return password;
     }
 
-    *//**
+    /**
      * Sets password.
      *
      * @param password the password
-     *//*
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
-    *//**
+    /**
      * Gets driver class.
      *
      * @return the driver class
-     *//*
+     */
     public String getDriverClass() {
         return driverClass;
     }
 
-    *//**
+    /**
      * Sets driver class.
      *
      * @param driverClass the driver class
-     *//*
+     */
     public void setDriverClass(String driverClass) {
         this.driverClass = driverClass;
     }
 
-    *//**
+    /**
      * Gets url.
      *
      * @return the url
-     *//*
+     */
     public String getUrl() {
         return url;
     }
 
-    *//**
+    /**
      * Sets url.
      *
      * @param url the url
-     *//*
+     */
     public void setUrl(String url) {
         this.url = url;
     }
 
-    *//**
+    /**
      * Is read only boolean.
      *
      * @return the boolean
-     *//*
+     */
     public boolean isReadOnly() {
         return readOnly;
     }
 
-    *//**
+    /**
      * Sets read only.
      *
      * @param readOnly the read only
-     *//*
+     */
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
     }
 
-    *//**
+    /**
      * Data source data source.
      *
      * @return the data source
      * @throws Throwable the throwable
-     *//*
+     */
     private static final String DB_URL = "db_url";
     private static final String DB_HOST = "db_host";
     private static final String DB_PORT = "db_port";
@@ -216,11 +215,11 @@ public class DatasourceConfig {
         }
     }
 
-    *//**
+    /**
      * Gets init sql.
      *
      * @return the init sql
-     *//*
+     */
     public String getInitSql() {
         if (isNull(initSql)) {
             return "";
@@ -242,50 +241,49 @@ public class DatasourceConfig {
         }
     }
 
-    *//**
+    /**
      * Sets init sql.
      *
      * @param initSql the init sql
-     *//*
+     */
     public void setInitSql(String initSql) {
         this.initSql = initSql;
     }
 
-    *//**
+    /**
      * Gets test sql.
      *
      * @return the test sql
-     *//*
+     */
     public String getTestSql() {
         return testSql;
     }
 
-    *//**
+    /**
      * Sets test sql.
      *
      * @param testSql the test sql
-     *//*
+     */
     public void setTestSql(String testSql) {
         this.testSql = testSql;
     }
 
-    *//**
+    /**
      * Gets database name.
      *
      * @return the database name
-     *//*
+     */
     public String getDatabaseName() {
         return databaseName;
     }
 
-    *//**
+    /**
      * Sets database name.
      *
      * @param databaseName the database name
-     *//*
+     */
     public void setDatabaseName(String databaseName) {
         this.databaseName = databaseName;
     }
 }
 
-*/

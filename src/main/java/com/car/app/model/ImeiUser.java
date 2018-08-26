@@ -3,19 +3,19 @@ package com.car.app.model;
 import com.car.app.annotation.IdFlag;
 import com.car.app.annotation.TableName;
 
-@TableName("car_user")
-public class User {
+@TableName("imei_user")
+public class ImeiUser {
 
-	public User() {
+	public ImeiUser() {
 		
 	}
 	
 	@IdFlag
 	private Integer id;
 	private String account;
-	private String password;
 	private String imei;
 	private String uType;
+	private Integer count;
 	public Integer getId() {
 		return id;
 	}
@@ -28,12 +28,6 @@ public class User {
 	public void setAccount(String account) {
 		this.account = account;
 	}
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
 	public String getImei() {
 		return imei;
 	}
@@ -45,6 +39,12 @@ public class User {
 	}
 	public void setuType(String uType) {
 		this.uType = uType;
+	}
+	public Integer getCount() {
+		return count;
+	}
+	public void setCount(Integer count) {
+		this.count = count;
 	}
 
 	
