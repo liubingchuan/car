@@ -11,6 +11,8 @@ public class LoginRequest extends BaseRequest{
 	private String password;
 	
 	private String type;
+	
+	private String deviceToken;
 
 	public String getAccount() {
 		return account;
@@ -43,6 +45,14 @@ public class LoginRequest extends BaseRequest{
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getDeviceToken() {
+		return deviceToken;
+	}
+
+	public void setDeviceToken(String deviceToken) {
+		this.deviceToken = deviceToken;
 	}
 	
 	

@@ -1,4 +1,4 @@
-package com.car.app.dao.mapper;
+package com.car.app.mapper;
 
 import com.car.app.annotation.ColumnName;
 import com.car.app.annotation.DontMapping;

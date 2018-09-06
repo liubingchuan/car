@@ -1,9 +1,9 @@
-package com.car.app.dao.mapper;
+package com.car.app.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 
-import com.car.app.dao.mapper.BasedProvider;
+import com.car.app.mapper.BasedProvider;
 import com.car.app.model.User;
 
 import java.util.List;

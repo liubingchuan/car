@@ -21,13 +21,15 @@ import com.car.app.common.request.IOTLocRequest;
 import com.car.app.common.request.LoginRequest;
 import com.car.app.common.request.RegisterRequest;
 import com.car.app.common.request.ResetRequest;
-import com.car.app.dao.mapper.ImeiUserMapper;
-import com.car.app.dao.mapper.InfoMapper;
-import com.car.app.dao.mapper.UserMapper;
+import com.car.app.mapper.ImeiUserMapper;
+import com.car.app.mapper.InfoMapper;
+import com.car.app.mapper.UserMapper;
 import com.car.app.model.ImeiUser;
 import com.car.app.model.Information;
 import com.car.app.model.User;
+import com.car.app.service.Cache;
 import com.car.app.utils.JwtUtils;
+import com.car.app.utils.notification.NotificationUtil;
 
 
 
@@ -46,6 +48,9 @@ public class CarController {
 	
 	@Autowired
 	private InfoMapper infoMapper;
+	
+	@Autowired
+	private Cache cache;
 	
 	@ResponseBody
 	@RequestMapping(value = "register", method = RequestMethod.POST,consumes = "application/json")
@@ -91,6 +96,14 @@ public class CarController {
 		if(users != null && users.size()>0) {
 			User u = users.get(0);
 			if(u.getPassword().equals(request.getPassword())) {
+				String deviceToken = request.getDeviceToken();
+				if(deviceToken != null) {
+					if (cache.get(request.getAccount()) == null || "".equals(cache.get(request.getAccount()))) {
+						cache.save(request.getAccount(), deviceToken);
+					}else {
+						cache.update(request.getAccount(), deviceToken);
+					}
+				}
 				//把token返回给客户端-->客户端保存至cookie-->客户端每次请求附带cookie参数
 				String JWT = JwtUtils.createJWT("1", u.getAccount(), SystemConstant.JWT_TTL);
 				List<String> imeis = new ArrayList<String>();
@@ -147,6 +160,10 @@ public class CarController {
 			Information info = infos.get(0);
 			infoMapper.deleteOne(info.getTimestamps(), info.getImei(), info.getIotstate());
 		}
+		List<Information> oldInfos = infoMapper.getInfosByImeiAndIotstateAndTime(iotstate, imei, collectTime);
+		if(oldInfos != null && oldInfos.size() > 0) {
+			R.error().put("status", "6").put("duplicate", true);
+		}
 		Information info = new Information();
 		info.setTimestamps(new Date().getTime());
 		info.setImei(imei);
@@ -167,6 +184,21 @@ public class CarController {
 			iuMapper.updateImei(imei, 3);
 		}else if(count == 2) {
 			iuMapper.updateImei(imei, 0);
+		}
+		if("2".equals(iotstate)) {
+			List<ImeiUser> imeiUsers = iuMapper.getIMEIUserByIMEI(imei);
+			if(imeiUsers == null || imeiUsers.size()==0) {
+				R.error().put("status", "4").put("msg", "未绑定imei与account，导致消息推送失败");
+			}
+			String deviceToken = cache.get(imeiUsers.get(0).getAccount());
+			if(deviceToken != null && !"".equals(deviceToken)) {
+				try {
+					NotificationUtil.sendIOSUnicast(deviceToken);
+				} catch (Exception e) {
+					e.printStackTrace();
+					R.error().put("status", "4").put("msg", "消息推送失败");
+				}
+			}
 		}
 		return R.ok().put("status", "1").put("binding", count);
 	}
