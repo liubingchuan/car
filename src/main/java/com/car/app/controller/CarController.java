@@ -214,10 +214,14 @@ public class CarController {
 		if(imei == null || account == null || dataType == null || count == null ) {
 			return R.error().put("status", "5");
 		}
-		
-		List<Information> infos = infoMapper.getInfosByImeiAndIotstate(dataType, imei);
+		List<Information> infos = new ArrayList<Information>();
+		if("3".endsWith(dataType)) {
+			infos = infoMapper.getInfosByImei(imei);
+		}else {
+			infos = infoMapper.getInfosByImeiAndIotstate(dataType, imei);
+		}
 		if(infos == null || infos.size() == 0) {
-			return R.error().put("status", "3");
+			return R.notFound().put("status", "3");
 		}
 		if(!"0".endsWith(count)) {
 			if(infos.size() < Integer.valueOf(count)) {

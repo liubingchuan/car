@@ -18,6 +18,9 @@ public interface InfoMapper {
     @Select("SELECT * FROM information order by timestamps asc")
     List<Information> getAll();
     
+    @Select("SELECT * FROM information where imei = #{imei} order by timestamps desc")
+    List<Information> getInfosByImei(@Param("imei") String imei);
+    
     @Select("SELECT * FROM information where imei = #{imei} and iotstate = #{iotstate} order by timestamps desc")
     List<Information> getInfosByImeiAndIotstate(@Param("iotstate") String iotstate, @Param("imei") String imei);
     
