@@ -14,6 +14,7 @@ public class User {
 	private Integer id;
 	private String account;
 	private String password;
+	private String nick;
 	private String imei;
 	private String uType;
 	public Integer getId() {
@@ -46,6 +47,11 @@ public class User {
 	public void setuType(String uType) {
 		this.uType = uType;
 	}
+	public String getNick() {
+		return nick;
+	}
+	public void setNick(String nick) {
+		this.nick = nick;
+	}
 
-	
 }

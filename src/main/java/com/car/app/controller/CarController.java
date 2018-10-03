@@ -14,16 +14,23 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.car.app.common.R;
 import com.car.app.common.SystemConstant;
+import com.car.app.common.request.FriendManagerRequest;
+import com.car.app.common.request.GetUserInfoRequest;
 import com.car.app.common.request.IOTInfoRequest;
 import com.car.app.common.request.IOTLocRequest;
 import com.car.app.common.request.LoginRequest;
 import com.car.app.common.request.RegisterRequest;
 import com.car.app.common.request.ResetRequest;
+import com.car.app.common.request.UpdateUserInfoRequest;
+import com.car.app.mapper.FriendsMapper;
 import com.car.app.mapper.ImeiUserMapper;
 import com.car.app.mapper.InfoMapper;
 import com.car.app.mapper.UserMapper;
+import com.car.app.model.Friends;
 import com.car.app.model.ImeiUser;
 import com.car.app.model.Information;
 import com.car.app.model.User;
@@ -50,6 +57,9 @@ public class CarController {
 	private InfoMapper infoMapper;
 	
 	@Autowired
+	private FriendsMapper friendsMapper;
+	
+	@Autowired
 	private Cache cache;
 	
 	@ResponseBody
@@ -68,15 +78,17 @@ public class CarController {
 		User user = new User();
 		user.setAccount(account);
 		user.setPassword(password);
+		
 		if(request.getImei() != null) {
+			// account与imei一对多，放开这里的绑定判断
+//			List<ImeiUser> imeis = iuMapper.getIMEIUserByIMEIAndCount(imei, 1);
+//			if(imeis != null && imeis.size()>0) {
+//				return R.error().put("status", "3");
+//			}
 			ImeiUser imeiUser = new ImeiUser();
 			imeiUser.setAccount(account);
 			imeiUser.setImei(imei);
 			imeiUser.setCount(1);
-			List<ImeiUser> imeis = iuMapper.getIMEIUserByIMEIAndCount(imei, 1);
-			if(imeis != null && imeis.size()>0) {
-				return R.error().put("status", "3");
-			}
 			iuMapper.insertIMEIUser(imeiUser);
 			user.setImei(imei);
 		}
@@ -180,6 +192,14 @@ public class CarController {
 			ImeiUser imu = imus.get(0);
 			count = imu.getCount();
 		}
+		
+		
+		/**
+		 * 数据库中建立一个绑定状态表，表信息包括IMEI、账号、状态、
+		 * 时间，主Key、账号类型是IMEI码，其中状态0表示未被绑定，1表示第一次被绑定，
+		 * 2表示第一次被解绑，3表示绑定，接收到IOT上传数据后，把这个状态返回给IOT设备，
+		 * 如果状态为1，返回设备后数据库此状态变为3，如果状态为2，返回设备后数据库此状态变为0
+		 */
 		if(count == 1) {
 			iuMapper.updateImei(imei, 3);
 		}else if(count == 2) {
@@ -190,13 +210,32 @@ public class CarController {
 			if(imeiUsers == null || imeiUsers.size()==0) {
 				R.error().put("status", "4").put("msg", "未绑定imei与account，导致消息推送失败");
 			}
-			String deviceToken = cache.get(imeiUsers.get(0).getAccount());
-			if(deviceToken != null && !"".equals(deviceToken)) {
-				try {
-					NotificationUtil.sendIOSUnicast(deviceToken);
-				} catch (Exception e) {
-					e.printStackTrace();
-					R.error().put("status", "4").put("msg", "消息推送失败");
+			for(ImeiUser iu: imeiUsers) {
+				String account = iu.getAccount();
+				String myToken = cache.get(account);
+				if(myToken != null && !"".equals(myToken)) {
+					try {
+						NotificationUtil.sendIOSUnicast(myToken);
+					} catch (Exception e) {
+						e.printStackTrace();
+						R.error().put("status", "4").put("msg", "消息推送失败");
+					}
+				}
+				List<Friends> toFriends = friendsMapper.getFriendsByAccountAndOperationAndMesend(account, "2", "1");
+				
+				for(Friends f: toFriends) {
+					List<Friends> backFs = friendsMapper.getFriendsByFriendaccountAndOperationAndMereceive(f.getFriendaccount(), "2", "1");
+					if(backFs !=null && backFs.size()>0) {
+						String deviceToken = cache.get(f.getFriendaccount());
+						if(deviceToken != null && !"".equals(deviceToken)) {
+							try {
+								NotificationUtil.sendIOSUnicast(deviceToken);
+							} catch (Exception e) {
+								e.printStackTrace();
+								R.error().put("status", "4").put("msg", "消息推送失败");
+							}
+						}
+					}
 				}
 			}
 		}
@@ -230,6 +269,143 @@ public class CarController {
 			infos = infos.subList(0, Integer.valueOf(count));
 		}
 		return R.ok().put("status", "1").put("informations", infos);
+	}
+	
+	@ResponseBody
+	@RequestMapping(value = "getuserinfo", method = RequestMethod.POST,consumes = "application/json")
+	public R getuserinfo(@RequestBody GetUserInfoRequest request) {
+		String account = request.getAccount();
+		if(account == null ) {
+			return R.error().put("status", "5");
+		}
+		List<User> users = userMapper.getUserByAccount(account);
+		if(users == null || users.size()==0) {
+			return R.error().put("status", "2");
+		}
+		String nick = users.get(0).getNick();
+		List<ImeiUser> imeiUsers = iuMapper.getIMEIUserByAccount(account);
+		List<String> imeis = new ArrayList<String>();
+		if(imeiUsers != null && imeiUsers.size()>0) {
+			for(ImeiUser iu: imeiUsers) {
+				imeis.add(iu.getImei());
+			}
+		}
+		
+		JSONArray array = new JSONArray();
+		List<Friends> tofriends = friendsMapper.getFriendsByAccount(account);
+		for(Friends f: tofriends) {
+			JSONObject obj = new JSONObject();
+			obj.put("account", f.getFriendaccount());
+			List<User> list = userMapper.getUserByAccount(f.getFriendaccount());
+			obj.put("nick", list.get(0).getNick());
+			if(f.getOperation().equals("2")) {
+				obj.put("addstate", "3");
+				List<Friends> fds = friendsMapper.getFriendsByAccountAndFriend(f.getFriendaccount(), f.getAccount());
+				obj.put("friendagree", fds.get(0).getMesend());
+			}else if(f.getOperation().equals("1")) {
+				obj.put("addstate", "2");
+				obj.put("friendagree", "0");
+			}
+			obj.put("meagree", f.getMereceive());
+			array.add(obj);
+		}
+		List<Friends> fromfriends = friendsMapper.getFriendsByFriendaccountAndOperation(account,"1");
+		for(Friends f: fromfriends) {
+			JSONObject obj = new JSONObject();
+			obj.put("account", f.getAccount());
+			List<User> list = userMapper.getUserByAccount(f.getAccount());
+			obj.put("nick", list.get(0).getNick());
+			obj.put("addstate", "1");
+			obj.put("friendagree", f.getMesend());
+			obj.put("meagree", "0");
+			array.add(obj);
+		}
+		return R.ok().put("status", "1").put("nick", nick).put("imeis", imeis).put("friends", array);
+	}
+	
+	@ResponseBody
+	@RequestMapping(value = "updateuserinfo", method = RequestMethod.POST,consumes = "application/json")
+	public R updateuserinfo(@RequestBody UpdateUserInfoRequest request) {
+		String account = request.getAccount();
+		String nick = request.getNick();
+		List<String> imeis = request.getImeis();
+		if(account == null ) {
+			return R.error().put("status", "5");
+		}
+		if(nick == null && imeis == null) {
+			return R.ok().put("status", "1");
+		}
+		List<User> accounts = userMapper.getUserByAccount(account);
+		if(accounts == null || accounts.size() == 0) {
+			return R.error().put("status", "2");
+		}
+		iuMapper.deleteByAccount(account);
+		if(imeis != null && imeis.size()>0) {
+			for(String imei: imeis) {
+				ImeiUser imu = new ImeiUser();
+				imu.setAccount(account);
+				imu.setImei(imei);
+				imu.setCount(1);
+				iuMapper.insertIMEIUser(imu);
+			}
+		}
+		if(nick != null) {
+			userMapper.updateNick(account, nick);
+		}
+		
+		return R.ok().put("status", "1");
+	}
+	
+	@ResponseBody
+	@RequestMapping(value = "friendmanager", method = RequestMethod.POST,consumes = "application/json")
+	public R friendmanager(@RequestBody FriendManagerRequest request) {
+		String account = request.getAccount();
+		String friendaccount = request.getFriendaccount();
+		String operation = request.getOperation();
+		String mesend = request.getMesend();
+		String mereceive = request.getMereceive();
+		if(account == null || friendaccount == null || operation == null || mesend == null || mereceive == null) {
+			return R.error().put("status", "5");
+		}
+		List<User> accounts = userMapper.getUserByAccount(account);
+		if(accounts == null || accounts.size() == 0) {
+			return R.error().put("status", "2");
+		}
+		
+		List<User> friendaccounts = userMapper.getUserByAccount(friendaccount);
+		if(friendaccounts == null || friendaccounts.size() == 0) {
+			return R.error().put("status", "3");
+		}
+		
+		if("1".equals(operation)) {
+			Friends friends = new Friends();
+			friends.setAccount(account);
+			friends.setFriendaccount(friendaccount);
+			friends.setMesend(mesend);
+			friends.setMereceive(mereceive);
+			friends.setOperation(operation);
+			friendsMapper.insertFriends(friends);
+		} else if("2".equals(operation)) {
+			// 对端发送确认时，需要颠倒顺序
+			List<Friends> friends = friendsMapper.getFriendsByAccountAndFriend(friendaccount, account);
+			if(friends == null || friends.size()==0) {
+				return R.error().put("status", "4");
+			}
+			friendsMapper.updateFriend(operation, friendaccount, account);
+			Friends newFriend = new Friends();
+			newFriend.setAccount(account);
+			newFriend.setFriendaccount(friendaccount);
+			newFriend.setMesend(mesend);
+			newFriend.setMereceive(mereceive);
+			newFriend.setOperation(operation);
+			friendsMapper.insertFriends(newFriend);
+		} else if("3".equals(operation)) {
+			friendsMapper.deleteByAccountAndFriend(account, friendaccount);
+			friendsMapper.deleteByAccountAndFriend(friendaccount, account);
+			logger.debug("解除好友关系");
+		}
+		
+		return R.ok().put("status", "1");
 	}
 	
 }

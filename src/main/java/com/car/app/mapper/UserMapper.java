@@ -26,5 +26,8 @@ public interface UserMapper {
     
     @Update("update car_user set password = #{password} where account = #{account}")
     void updatePassword(@Param("account") String account, @Param("password") String password);
+    
+    @Update("update car_user set nick = #{nick} where account = #{account}")
+    void updateNick(@Param("account") String account, @Param("nick") String nick);
 
 }
