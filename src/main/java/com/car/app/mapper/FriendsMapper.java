@@ -40,7 +40,7 @@ public interface FriendsMapper {
     @Delete("DELETE FROM friends where account = #{account} and friendaccount = #{friendaccount}")
     void deleteByAccountAndFriend(@Param("account") String account, @Param("friendaccount") String friendaccount);
     
-    @Update("update friends set operation = #{operation} where account = #{account} and friendaccount = #{friendaccount}")
-    void updateFriend(@Param("operation") String operation, @Param("account") String account, @Param("friendaccount") String friendaccount);
+    @Update("update friends set operation = #{operation},mesend = #{mesend},mereceive = #{mereceive} where account = #{account} and friendaccount = #{friendaccount}")
+    void updateFriend(@Param("operation") String operation, @Param("account") String account, @Param("friendaccount") String friendaccount, @Param("mesend") String mesend, @Param("mereceive") String mereceive);
 
 }

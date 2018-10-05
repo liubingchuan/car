@@ -109,6 +109,7 @@ public class CarController {
 			User u = users.get(0);
 			if(u.getPassword().equals(request.getPassword())) {
 				String deviceToken = request.getDeviceToken();
+				logger.info("username is ->" + request.getAccount() + "device token is ->" + request.getDeviceToken());
 				if(deviceToken != null) {
 					if (cache.get(request.getAccount()) == null || "".equals(cache.get(request.getAccount()))) {
 						cache.save(request.getAccount(), deviceToken);
@@ -226,13 +227,19 @@ public class CarController {
 				for(Friends f: toFriends) {
 					List<Friends> backFs = friendsMapper.getFriendsByFriendaccountAndOperationAndMereceive(f.getFriendaccount(), "2", "1");
 					if(backFs !=null && backFs.size()>0) {
+						
 						String deviceToken = cache.get(f.getFriendaccount());
+						String nick = null;
+						List<User> users = userMapper.getUserByAccount(f.getFriendaccount());
+						if(users != null || users.size() > 0) {
+							nick = users.get(0).getNick();
+						}
 						if(deviceToken != null && !"".equals(deviceToken)) {
 							try {
 								NotificationUtil.sendIOSUnicast(deviceToken);
 							} catch (Exception e) {
 								e.printStackTrace();
-								R.error().put("status", "4").put("msg", "消息推送失败");
+								R.error().put("status", "4").put("msg", "您的好友" + (nick == null ? f.getFriendaccount():nick) + "车罩被移动");
 							}
 						}
 					}
@@ -306,6 +313,7 @@ public class CarController {
 				obj.put("addstate", "2");
 				obj.put("friendagree", "0");
 			}
+			obj.put("mesend", f.getMesend());
 			obj.put("meagree", f.getMereceive());
 			array.add(obj);
 		}
@@ -318,6 +326,13 @@ public class CarController {
 			obj.put("addstate", "1");
 			obj.put("friendagree", f.getMesend());
 			obj.put("meagree", "0");
+			obj.put("mesend", f.getMesend());
+			List<ImeiUser> ius = iuMapper.getIMEIUserByAccount(f.getAccount());
+			List<String> fImeis = new ArrayList<String>();
+			for(ImeiUser iu: ius) {
+				fImeis.add(iu.getImei());
+			}
+			obj.put("imeis", fImeis);
 			array.add(obj);
 		}
 		return R.ok().put("status", "1").put("nick", nick).put("imeis", imeis).put("friends", array);
@@ -391,7 +406,8 @@ public class CarController {
 			if(friends == null || friends.size()==0) {
 				return R.error().put("status", "4");
 			}
-			friendsMapper.updateFriend(operation, friendaccount, account);
+			operation = "2";
+			friendsMapper.updateFriend(operation, friendaccount, account, mesend, mereceive);
 			Friends newFriend = new Friends();
 			newFriend.setAccount(account);
 			newFriend.setFriendaccount(friendaccount);
@@ -403,6 +419,10 @@ public class CarController {
 			friendsMapper.deleteByAccountAndFriend(account, friendaccount);
 			friendsMapper.deleteByAccountAndFriend(friendaccount, account);
 			logger.debug("解除好友关系");
+		} else if("4".equals(operation)) {
+			operation = "2";
+			friendsMapper.updateFriend(operation, account, friendaccount, mesend, mereceive);
+			logger.debug("更新好友状态");
 		}
 		
 		return R.ok().put("status", "1");
