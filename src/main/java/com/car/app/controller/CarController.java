@@ -192,6 +192,8 @@ public class CarController {
 		if(imus != null) {
 			ImeiUser imu = imus.get(0);
 			count = imu.getCount();
+		}else {
+			R.error().put("status", "4").put("msg", "未绑定imei与account，导致消息推送失败");
 		}
 		
 		
@@ -207,20 +209,23 @@ public class CarController {
 			iuMapper.updateImei(imei, 0);
 		}
 		if("2".equals(iotstate)) {
-			List<ImeiUser> imeiUsers = iuMapper.getIMEIUserByIMEI(imei);
-			if(imeiUsers == null || imeiUsers.size()==0) {
-				R.error().put("status", "4").put("msg", "未绑定imei与account，导致消息推送失败");
-			}
-			for(ImeiUser iu: imeiUsers) {
+//			List<ImeiUser> imeiUsers = iuMapper.getIMEIUserByIMEI(imei);
+//			if(imeiUsers == null || imeiUsers.size()==0) {
+//				R.error().put("status", "4").put("msg", "未绑定imei与account，导致消息推送失败");
+//			}
+			for(ImeiUser iu: imus) {
 				String account = iu.getAccount();
 				String myToken = cache.get(account);
+				
 				if(myToken != null && !"".equals(myToken)) {
 					try {
-						NotificationUtil.sendIOSUnicast(myToken);
+						NotificationUtil.sendIOSUnicast(myToken, null);
 					} catch (Exception e) {
 						e.printStackTrace();
-						R.error().put("status", "4").put("msg", "消息推送失败");
+						return R.error().put("status", "4").put("msg", "消息推送失败");
 					}
+				}else {
+					continue;
 				}
 				List<Friends> toFriends = friendsMapper.getFriendsByAccountAndOperationAndMesend(account, "2", "1");
 				
@@ -229,14 +234,17 @@ public class CarController {
 					if(backFs !=null && backFs.size()>0) {
 						
 						String deviceToken = cache.get(f.getFriendaccount());
+						if(deviceToken == null) {
+							continue;
+						}
 						String nick = null;
-						List<User> users = userMapper.getUserByAccount(f.getFriendaccount());
+						List<User> users = userMapper.getUserByAccount(f.getAccount());
 						if(users != null || users.size() > 0) {
 							nick = users.get(0).getNick();
 						}
 						if(deviceToken != null && !"".equals(deviceToken)) {
 							try {
-								NotificationUtil.sendIOSUnicast(deviceToken);
+								NotificationUtil.sendIOSUnicast(deviceToken, nick == null ? f.getAccount():nick);
 							} catch (Exception e) {
 								e.printStackTrace();
 								R.error().put("status", "4").put("msg", "您的好友" + (nick == null ? f.getFriendaccount():nick) + "车罩被移动");
@@ -315,6 +323,12 @@ public class CarController {
 			}
 			obj.put("mesend", f.getMesend());
 			obj.put("meagree", f.getMereceive());
+			List<ImeiUser> ius = iuMapper.getIMEIUserByAccount(f.getFriendaccount());
+			List<String> fImeis = new ArrayList<String>();
+			for(ImeiUser iu: ius) {
+				fImeis.add(iu.getImei());
+			}
+			obj.put("imeis", fImeis);
 			array.add(obj);
 		}
 		List<Friends> fromfriends = friendsMapper.getFriendsByFriendaccountAndOperation(account,"1");

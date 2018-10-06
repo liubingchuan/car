@@ -33,12 +33,16 @@ public class NotificationUtil {
 		client.send(broadcast);
 	}
 	
-	public static void sendIOSUnicast(String deviceToken) throws Exception {
+	public static void sendIOSUnicast(String deviceToken, String name) throws Exception {
 		IOSUnicast unicast = new IOSUnicast(appkey,appMasterSecret);
 		// TODO Set your device token
 //		unicast.setDeviceToken("ed2cd1ddca6e632afee8bd329a700fef948af3afd6dc50df1558fba9ffed3d41");
 		unicast.setDeviceToken(deviceToken);
-		unicast.setAlert("您的車罩被移動了");
+		if(name == null) {
+			unicast.setAlert("您的車罩被移動了");
+		}else {
+			unicast.setAlert("您的好友（" + name+ "）的車罩被移動了");
+		}
 		unicast.setBadge( 0);
 		unicast.setSound( "default");
 		// TODO set 'production_mode' to 'true' if your app is under production mode
